@@ -1,0 +1,34 @@
+name: STRINGS.WORLDS.MARSHYMOONLET.NAME
+description: STRINGS.WORLDS.MARSHYMOONLET.DESCRIPTION
+nameTables: [ SWAMP ]
+asteroidIcon: asteroid_marshy_moonlet_kanim
+disableWorldTraits: true
+
+worldTraitScale: 0.00
+worldsize:
+  X: 70
+  Y: 40
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    DrawWorldBorder: true
+    DrawWorldBorderTop: false
+    DrawWorldBorderOverVacuum: false
+    WorldBorderThickness: 1
+    WorldBorderRange: 0
+    OverworldDensityMin: 4
+    OverworldDensityMax: 8
+    OverworldAvoidRadius: 3
+    OverworldSampleBehaviour: PoissonDisk
+    OverworldMinNodes: 1
+
+# List all the zone files to load
+subworldFiles:
+  - name: subworlds/Empty
+
+unknownCellsAllowedSubworlds:
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/Empty

@@ -1,0 +1,42 @@
+name: STRINGS.WORLDS.MINIBASE.NAME
+description: STRINGS.WORLDS.MINIBASE.DESCRIPTION
+disableWorldTraits: true
+asteroidIcon: asteroid_vanilla_oceania_kanim
+
+worldTraitScale: 0.00
+worldsize:
+  X: 70
+  Y: 40
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    DrawWorldBorder: true
+    DrawWorldBorderTop: false
+    DrawWorldBorderOverVacuum: false
+    WorldBorderThickness: 1
+    WorldBorderRange: 0
+    OverworldDensityMin: 4
+    OverworldDensityMax: 8
+    OverworldAvoidRadius: 3
+    OverworldSampleBehaviour: PoissonDisk
+    OverworldMinNodes: 1
+
+startSubworldName: subworlds/Empty
+startingBaseTemplate: bases/sandstoneBase
+startingBasePositionHorizontal:
+  min: 0.5
+  max: 0.5
+startingBasePositionVertical:
+  min: 0.5
+  max: 0.5
+
+# List all the zone files to load
+subworldFiles:
+  - name: subworlds/Empty
+
+unknownCellsAllowedSubworlds:
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/Empty
