@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using ProcGenGame;
 using Klei.CustomSettings;
 using static MiniBase.MiniBaseConfig;
 
@@ -7,9 +8,33 @@ namespace MiniBase
 {
     class MiniBaseUtils
     {
-        public static bool IsMiniBase()
+        public static bool IsMiniBaseCluster()
         {
             return CustomGameSettings.Instance.GetCurrentQualitySetting(CustomGameSettingConfigs.ClusterLayout).id == ("clusters/" + ClusterName);
+        }
+
+        public static bool IsMiniBaseStartPlanetoid()
+        {
+	    var clusterLayout = SaveLoader.Instance.ClusterLayout;
+            foreach (WorldGen world in clusterLayout.worlds) {
+                if (!world.isStartingWorld) {
+                    continue;
+                }
+
+                return IsMiniBasePlanetoid(world);
+            }
+
+            return false;
+        }
+
+        public static bool IsMiniBasePlanetoid(WorldGen gen)
+        {
+            bool is_main = gen.Settings.world.filePath == "worlds/MiniBase";
+            bool is_second = gen.Settings.world.filePath == "worlds/BabyOilyMoonlet";
+            bool is_tree = gen.Settings.world.filePath == "worlds/BabyMarshyMoonlet";
+            bool is_niobium = gen.Settings.world.filePath == "worlds/BabyNiobiumMoonlet";
+
+	    return (is_main || is_second || is_tree || is_niobium);
         }
 
         public static void Log(string msg, bool force = false)

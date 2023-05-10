@@ -220,7 +220,7 @@ namespace MiniBase
         {
             public static void Postfix()
             {
-                if (!IsMiniBase())
+                if (!IsMiniBaseStartPlanetoid())
                     return;
                 Log("MinionSelectScreen_OnProceed_Patch Postfix");
                 int radius = (int)(Math.Max(Grid.WidthInCells, Grid.HeightInCells) * 1.5f);
@@ -234,7 +234,7 @@ namespace MiniBase
         {
             public static void Postfix(TemporalTear temporalTear)
             {
-                if (!IsMiniBase())
+                if (!IsMiniBaseCluster())
                     return;
 
                 Log("ClusterPOIManager_RegisterTemporalTear_Patch Postfix");
@@ -250,7 +250,7 @@ namespace MiniBase
             public static void Postfix()
             {
                 Log("Game_OnSpawn_Patch Postfix");
-                if (IsMiniBase())
+                if (IsMiniBaseCluster())
                 {
                     var immigration = Immigration.Instance;
                     const float SecondsPerDay = 600f;
@@ -267,7 +267,7 @@ namespace MiniBase
         {
             public static void Postfix(ref CarePackageInfo[] ___carePackages)
             {
-                if (!IsMiniBase())
+                if (!IsMiniBaseCluster())
                     return;
                 Log("Immigration_ConfigureCarePackages_Patch Postfix");
                 // Add new care packages
@@ -278,7 +278,7 @@ namespace MiniBase
                 }
                 void AddItem(string name, float amount, int cycle = -1)
                 {
-                    packageList.Add(new CarePackageInfo(name, amount, cycle < 0 ? IsMiniBase : (Func<bool>)(() => CycleCondition(cycle) && IsMiniBase())));
+                    packageList.Add(new CarePackageInfo(name, amount, cycle < 0 ? IsMiniBaseCluster : (Func<bool>)(() => CycleCondition(cycle) && IsMiniBaseCluster())));
                 }
 
                 // Minerals
@@ -329,7 +329,7 @@ namespace MiniBase
         {
             public static void Postfix(ref bool __result)
             {
-                if (IsMiniBase())
+                if (IsMiniBaseCluster())
                     __result = true;
             }
         }
@@ -388,12 +388,12 @@ namespace MiniBase
             {
                 Log("WorldGen_RenderOffline_Patch Prefix");
                 // Skip the original method if on minibase world
-                return !IsMiniBase();
+                return !IsMiniBasePlanetoid(__instance);
             }
 
             public static void Postfix(WorldGen __instance, ref bool __result, bool doSettle, ref Sim.Cell[] cells, ref Sim.DiseaseCell[] dc, int baseId, ref List<WorldTrait> placedStoryTraits, bool isStartingWorld)
             {
-                if (!IsMiniBase())
+                if (!IsMiniBasePlanetoid(__instance))
                     return;
                 Log("WorldGen_RenderOffline_Patch Postfix");
                 __result = MiniBaseWorldGen.CreateWorld(__instance, ref cells, ref dc, baseId, ref placedStoryTraits);
