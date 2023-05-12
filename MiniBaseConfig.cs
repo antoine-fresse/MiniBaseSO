@@ -5,10 +5,11 @@ namespace MiniBase
 {
     public class MiniBaseConfig
     {
-        public static int WORLD_WIDTH = 128;
-        public static int WORLD_HEIGHT = 128;
+        //public static int WORLD_WIDTH = 128;
+        //public static int WORLD_HEIGHT = 128;
         public static int BORDER_SIZE = 3;
         public static int TOP_MARGIN = 3;
+        public static int COLONIZABLE_EXTRA_MARGIN = 8; // extra space to land rockets
         public static int CORNER_SIZE = 7;
         public static int DIAGONAL_BORDER_SIZE = 4;
 

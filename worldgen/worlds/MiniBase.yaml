@@ -1,12 +1,12 @@
 name: STRINGS.WORLDS.MINIBASE.NAME
 description: STRINGS.WORLDS.MINIBASE.DESCRIPTION
 disableWorldTraits: true
-asteroidIcon: asteroid_vanilla_oceania_kanim
+asteroidIcon: Asteroid_minibase_kanim
 
 worldTraitScale: 0.00
 worldsize:
-  X: 70
-  Y: 40
+  X: 76
+  Y: 49
 layoutMethod: PowerTree
 
 defaultsOverrides:

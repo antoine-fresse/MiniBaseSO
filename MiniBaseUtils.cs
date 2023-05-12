@@ -2,14 +2,21 @@
 using UnityEngine;
 using Klei.CustomSettings;
 using static MiniBase.MiniBaseConfig;
+using System.Linq;
+using ProcGen;
+using System.Collections.Generic;
 
 namespace MiniBase
 {
     class MiniBaseUtils
     {
-        public static bool IsMiniBase()
+        // If the starting asteroid is worlds/MiniBase we consider the playthrough to be a minibase one (for Cluster Generaton Manager compatibility)
+        public static bool IsMiniBaseCluster()
         {
-            return CustomGameSettings.Instance.GetCurrentQualitySetting(CustomGameSettingConfigs.ClusterLayout).id == ("clusters/" + ClusterName);
+            Dictionary<string, ClusterLayout> clusterCache = SettingsCache.clusterLayouts.clusterCache;
+            var cluster = clusterCache[CustomGameSettings.Instance.GetCurrentQualitySetting(CustomGameSettingConfigs.ClusterLayout).id];
+            Log($"IsMiniBase startworld : {cluster.GetStartWorld()}");
+            return cluster.GetStartWorld() == "worlds/MiniBase";
         }
 
         public static void Log(string msg, bool force = false)

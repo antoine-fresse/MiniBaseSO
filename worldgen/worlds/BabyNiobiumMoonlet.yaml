@@ -1,13 +1,13 @@
-name: STRINGS.WORLDS.NIOBIUMMOONLET.NAME # Superconductive Asteroid
-description: STRINGS.WORLDS.NIOBIUMMOONLET.DESCRIPTION
+name: STRINGS.WORLDS.NIOBIUMMINIBASE.NAME # Superconductive Asteroid
+description: STRINGS.WORLDS.NIOBIUMMINIBASE.DESCRIPTION
 nameTables: [ MAGMA ]
 asteroidIcon: asteroid_niobium_planet_kanim
 disableWorldTraits: true
 
 worldTraitScale: 0.00
 worldsize:
-  X: 70
-  Y: 40
+  X: 52
+  Y: 63
 layoutMethod: PowerTree
 
 defaultsOverrides:

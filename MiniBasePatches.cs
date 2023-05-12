@@ -40,6 +40,8 @@ using YamlDotNet.RepresentationModel;
 using Klei.AI;
 using Database;
 using TUNING;
+using static STRINGS.DUPLICANTS.PERSONALITIES;
+using static STRINGS.NAMEGEN;
 
 namespace MiniBase
 {
@@ -112,7 +114,22 @@ namespace MiniBase
                 Log("ColonyDestinationSelectScreen_OnSpawn_Patch Prefix");
                 MiniBaseOptions.Reload();
 
+                WorldGen_RenderOffline_Patch.FoundTemporalTearOpener = false;
+                WorldGen_RenderOffline_Patch.AfterWorldGen = false;
+
                 var minibase_world = SettingsCache.worlds.worldCache["worlds/MiniBase"];
+                var oily_minibase_world = SettingsCache.worlds.worldCache["worlds/BabyOilyMoonlet"];
+                var marshy_minibase_world = SettingsCache.worlds.worldCache["worlds/BabyMarshyMoonlet"];
+                var niobium_minibase_world = SettingsCache.worlds.worldCache["worlds/BabyNiobiumMoonlet"];
+
+                var base_size = MiniBaseOptions.Instance.GetBaseSize();
+                var colonizable_base_size = new Vector2I(50, 60);
+
+                Traverse.Create(minibase_world).Property("worldsize").SetValue(new Vector2I(base_size.x + 2 * BORDER_SIZE, base_size.y + 2 * BORDER_SIZE + TOP_MARGIN));
+                Traverse.Create(oily_minibase_world).Property("worldsize").SetValue(new Vector2I(colonizable_base_size.x + 2 * BORDER_SIZE, colonizable_base_size.y + 2 * BORDER_SIZE + TOP_MARGIN + COLONIZABLE_EXTRA_MARGIN));
+                Traverse.Create(marshy_minibase_world).Property("worldsize").SetValue(new Vector2I(colonizable_base_size.x + 2 * BORDER_SIZE, colonizable_base_size.y + 2 * BORDER_SIZE + TOP_MARGIN + COLONIZABLE_EXTRA_MARGIN));
+                Traverse.Create(niobium_minibase_world).Property("worldsize").SetValue(new Vector2I(colonizable_base_size.x + 2 * BORDER_SIZE, colonizable_base_size.y + 2 * BORDER_SIZE + TOP_MARGIN + COLONIZABLE_EXTRA_MARGIN));
+
                 minibase_world.seasons.Clear();
                 
                 switch (MiniBaseOptions.Instance.SpaceRads)
@@ -220,25 +237,31 @@ namespace MiniBase
         {
             public static void Postfix()
             {
-                if (!IsMiniBase())
+                if (!IsMiniBaseCluster())
                     return;
+
                 Log("MinionSelectScreen_OnProceed_Patch Postfix");
                 int radius = (int)(Math.Max(Grid.WidthInCells, Grid.HeightInCells) * 1.5f);
                 GridVisibility.Reveal(0, 0, radius, radius - 1);
             }
         }
 
-        [HarmonyPatch(typeof(ClusterPOIManager), "RegisterTemporalTear")]
 
+        
+        [HarmonyPatch(typeof(ClusterPOIManager), "RegisterTemporalTear")]
         public static class ClusterPOIManager_RegisterTemporalTear_Patch
         {
-            public static void Postfix(TemporalTear temporalTear)
+            public static void Postfix(TemporalTear temporalTear, ClusterPOIManager __instance)
             {
-                if (!IsMiniBase())
-                    return;
-
-                Log("ClusterPOIManager_RegisterTemporalTear_Patch Postfix");
-                if (!temporalTear.IsOpen()) temporalTear.Open();
+                if (IsMiniBaseCluster())
+                {
+                    Log("ClusterPOIManager_RegisterTemporalTear_Patch Postfix");
+                    bool need_open = WorldGen_RenderOffline_Patch.AfterWorldGen && !WorldGen_RenderOffline_Patch.FoundTemporalTearOpener && !temporalTear.IsOpen();
+                    Log($"Need open temporal tear opener : {need_open}");
+                    if (need_open) temporalTear.Open();
+                    WorldGen_RenderOffline_Patch.AfterWorldGen = false;
+                    WorldGen_RenderOffline_Patch.FoundTemporalTearOpener = false;
+                }
             }
         }
         #region CarePackages
@@ -250,7 +273,7 @@ namespace MiniBase
             public static void Postfix()
             {
                 Log("Game_OnSpawn_Patch Postfix");
-                if (IsMiniBase())
+                if (IsMiniBaseCluster())
                 {
                     var immigration = Immigration.Instance;
                     const float SecondsPerDay = 600f;
@@ -267,7 +290,7 @@ namespace MiniBase
         {
             public static void Postfix(ref CarePackageInfo[] ___carePackages)
             {
-                if (!IsMiniBase())
+                if (!IsMiniBaseCluster())
                     return;
                 Log("Immigration_ConfigureCarePackages_Patch Postfix");
                 // Add new care packages
@@ -278,7 +301,7 @@ namespace MiniBase
                 }
                 void AddItem(string name, float amount, int cycle = -1)
                 {
-                    packageList.Add(new CarePackageInfo(name, amount, cycle < 0 ? IsMiniBase : (Func<bool>)(() => CycleCondition(cycle) && IsMiniBase())));
+                    packageList.Add(new CarePackageInfo(name, amount, cycle < 0 ? IsMiniBaseCluster : (Func<bool>)(() => CycleCondition(cycle) && IsMiniBaseCluster())));
                 }
 
                 // Minerals
@@ -329,7 +352,7 @@ namespace MiniBase
         {
             public static void Postfix(ref bool __result)
             {
-                if (IsMiniBase())
+                if (IsMiniBaseCluster())
                     __result = true;
             }
         }
@@ -346,37 +369,20 @@ namespace MiniBase
                 Log("Db_Initialize_Patch Prefix");
                 Strings.Add($"STRINGS.WORLDS.{ClusterName.ToUpperInvariant()}.NAME", ClusterName);
                 Strings.Add($"STRINGS.WORLDS.{ClusterName.ToUpperInvariant()}.DESCRIPTION", ClusterDescription);
+
+                Strings.Add($"STRINGS.WORLDS.MARSHYMINIBASE.NAME", "MiniBase Marshy Moonlet");
+                Strings.Add($"STRINGS.WORLDS.MARSHYMINIBASE.DESCRIPTION", "A marshy world, with a curious cybernetic tree");
+
+                Strings.Add($"STRINGS.WORLDS.OILYMINIBASE.NAME", "MiniBase Oily Moonlet");
+                Strings.Add($"STRINGS.WORLDS.OILYMINIBASE.DESCRIPTION", "A sulfurous world, with plenty of oil, rare minerals and metals");
+
+                Strings.Add($"STRINGS.WORLDS.NIOBIUMMINIBASE.NAME", "MiniBase Superconductive Moonlet");
+                Strings.Add($"STRINGS.WORLDS.NIOBIUMMINIBASE.DESCRIPTION", "An inhospitable world full of magma and precious metals");
+
                 Strings.Add($"STRINGS.UI.SPACEDESTINATIONS.HARVESTABLE_POI.NIOBIUMASTEROIDFIELD.NAME", "Niobium asteroid field");
                 Strings.Add($"STRINGS.UI.SPACEDESTINATIONS.HARVESTABLE_POI.NIOBIUMASTEROIDFIELD.DESC", "An asteroid field containing traces of niobium");
                 Strings.Add($"STRINGS.UI.SPACEDESTINATIONS.HARVESTABLE_POI.RESINASTEROIDFIELD.NAME", "Resin asteroid field");
                 Strings.Add($"STRINGS.UI.SPACEDESTINATIONS.HARVESTABLE_POI.RESINASTEROIDFIELD.DESC", "An asteroid field with plenty of liquid resin");
-
-                string spritePath = System.IO.Path.Combine(ModPath, ClusterIconName) + ".png";
-                Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                ImageConversion.LoadImage(texture, File.ReadAllBytes(spritePath));
-                Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, 512f, 512f), Vector2.zero);
-                Assets.Sprites.Add(ClusterIconName, sprite);
-            }
-        }
-
-        // Change minibase world size
-        [HarmonyPatch(typeof(Worlds), "UpdateWorldCache")]
-        public static class Worlds_UpdateWorldCache_Patch
-        {
-            public static void Postfix(Worlds __instance)
-            {
-                Log("Worlds_UpdateWorldCache_Patch Postfix");
-                var world = __instance.worldCache["worlds/" + ClusterMainWorld];
-                Traverse.Create(world).Property("worldsize").SetValue(new Vector2I(WORLD_WIDTH, WORLD_HEIGHT));
-
-                var world_tree = __instance.worldCache["worlds/BabyMarshyMoonlet"];
-                Traverse.Create(world_tree).Property("worldsize").SetValue(new Vector2I(WORLD_WIDTH, WORLD_HEIGHT));
-
-                var world_magma = __instance.worldCache["worlds/BabyNiobiumMoonlet"];
-                Traverse.Create(world_magma).Property("worldsize").SetValue(new Vector2I(WORLD_WIDTH, WORLD_HEIGHT));
-
-                var world_radioactive = __instance.worldCache["worlds/BabyOilyMoonlet"];
-                Traverse.Create(world_radioactive).Property("worldsize").SetValue(new Vector2I(WORLD_WIDTH, WORLD_HEIGHT));
             }
         }
 
@@ -384,19 +390,55 @@ namespace MiniBase
         [HarmonyPatch(typeof(WorldGen), "RenderOffline")]
         public static class WorldGen_RenderOffline_Patch
         {
+            public static bool AfterWorldGen = false;
+            public static bool FoundTemporalTearOpener = false;
+
+            public static bool IsMiniBaseWorld(WorldGen instance)
+            {
+                if (instance.Settings.world.filePath == "worlds/MiniBase") return true;
+                if(instance.Settings.world.filePath == "worlds/BabyOilyMoonlet") return true;
+                if (instance.Settings.world.filePath == "worlds/BabyMarshyMoonlet") return true;
+                if (instance.Settings.world.filePath == "worlds/BabyNiobiumMoonlet") return true;
+                return false;
+            }
             public static bool Prefix(WorldGen __instance, ref bool __result, bool doSettle, ref Sim.Cell[] cells, ref Sim.DiseaseCell[] dc, int baseId, ref List<WorldTrait> placedStoryTraits, bool isStartingWorld)
             {
                 Log("WorldGen_RenderOffline_Patch Prefix");
                 // Skip the original method if on minibase world
-                return !IsMiniBase();
+                return !IsMiniBaseWorld(__instance);
             }
 
             public static void Postfix(WorldGen __instance, ref bool __result, bool doSettle, ref Sim.Cell[] cells, ref Sim.DiseaseCell[] dc, int baseId, ref List<WorldTrait> placedStoryTraits, bool isStartingWorld)
             {
-                if (!IsMiniBase())
-                    return;
                 Log("WorldGen_RenderOffline_Patch Postfix");
-                __result = MiniBaseWorldGen.CreateWorld(__instance, ref cells, ref dc, baseId, ref placedStoryTraits);
+
+                if (IsMiniBaseWorld(__instance))
+                    __result = MiniBaseWorldGen.CreateWorld(__instance, ref cells, ref dc, baseId, ref placedStoryTraits);
+
+                if (IsMiniBaseCluster())
+                {
+                    AfterWorldGen = true;
+                    if (!FoundTemporalTearOpener)
+                    {
+                        if (__instance.POISpawners != null)
+                        {
+                            foreach (var spawner in __instance.POISpawners)
+                            {
+                                if (spawner.container.buildings == null) continue;
+                                foreach (var building in spawner.container.buildings)
+                                {
+                                    if (building.id == "TemporalTearOpener")
+                                    {
+                                        Log($"TemporalTearOpener found on : {__instance.Settings.world.filePath}");
+                                        FoundTemporalTearOpener = true;
+                                        break;
+                                    }
+                                }
+                                if (FoundTemporalTearOpener) break;
+                            }
+                        }
+                    }
+                }
             }
         }
 

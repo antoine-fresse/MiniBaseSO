@@ -28,6 +28,7 @@ namespace MiniBase
         {
             public MiniBaseBiomeProfile biome;
             public MiniBaseBiomeProfile core_biome;
+            public Vector2I world_size;
             public Vector2I size;
             public bool has_core;
             public int extra_top_margin = 0;
@@ -48,12 +49,14 @@ namespace MiniBase
         {
             Log("Creating world");
 
+            moonlet = new MoonletData();
             MiniBaseOptions options = MiniBaseOptions.Instance;
 
             moonlet.biome = options.GetBiome();
             moonlet.core_biome = options.GetCoreBiome();
-            moonlet.size = options.GetBaseSize();
             moonlet.has_core = options.HasCore();
+
+            moonlet.world_size = gen.WorldSize;
 
             bool is_main = gen.Settings.world.filePath == "worlds/MiniBase";
             if (is_main) moonlet.type = MoonletData.Moonlet.Start;
@@ -63,12 +66,10 @@ namespace MiniBase
             if (is_tree) moonlet.type = MoonletData.Moonlet.Tree;
             bool is_niobium = gen.Settings.world.filePath == "worlds/BabyNiobiumMoonlet";
             if (is_niobium) moonlet.type = MoonletData.Moonlet.Niobium;
-               
+
             if (!is_main)
             {
-                moonlet.size.x = (2 * moonlet.size.x) / 3;
-                moonlet.size.y = 60;
-                moonlet.extra_top_margin = 8;
+                moonlet.extra_top_margin = COLONIZABLE_EXTRA_MARGIN;
                 moonlet.has_core = false;
                 if (is_niobium)
                 {
@@ -78,13 +79,23 @@ namespace MiniBase
                 {
                     moonlet.biome = MiniBaseBiomeProfiles.TreeMoonletProfile;
                 }
-                if(is_second)
+                if (is_second)
                 {
                     moonlet.biome = MiniBaseBiomeProfiles.OilMoonletProfile;
                     moonlet.core_biome = MiniBaseCoreBiomeProfiles.MagmaCoreProfile;
                     moonlet.has_core = true;
                 }
             }
+            moonlet.size = new Vector2I(moonlet.world_size.x - 2 * BORDER_SIZE, moonlet.world_size.y - 2 * BORDER_SIZE - TOP_MARGIN - moonlet.extra_top_margin);
+            
+
+            Log($"World Size : {moonlet.world_size.x},{moonlet.world_size.y}");
+            Log($"Base Size : {moonlet.size.x},{moonlet.size.y}");
+
+            Log($"TOP : {Top(true)}");
+            Log($"BOTTOM : {Bottom(true)}");
+            Log($"LEFT : {Left(true)}");
+            Log($"RIGHT : {Right(true)}");
 
             Log("World name : " + gen.Settings.world.name);
             Log("World file : " + gen.Settings.world.filePath);
@@ -102,7 +113,7 @@ namespace MiniBase
             // Initialize noise maps
             Log("Initializing noise maps");
             updateProgressFn(UI.WORLDGEN.GENERATENOISE.key, 0f, WorldGenProgressStages.Stages.NoiseMapBuilder);
-            var noiseMap = GenerateNoiseMap(random, WORLD_WIDTH, WORLD_HEIGHT);
+            var noiseMap = GenerateNoiseMap(random, moonlet.world_size.x, moonlet.world_size.y);
             updateProgressFn(UI.WORLDGEN.GENERATENOISE.key, 0.9f, WorldGenProgressStages.Stages.NoiseMapBuilder);
 
             // Set biomes
@@ -351,12 +362,12 @@ namespace MiniBase
 
             // Top cell
             tags = new TagSet();
-            bounds = new Polygon(new Rect(0f, Top(), WORLD_WIDTH, WORLD_HEIGHT - Top()));
+            bounds = new Polygon(new Rect(0f, Top(), moonlet.world_size.x, moonlet.world_size.y - Top()));
             CreateOverworldCell(SpaceBiome, bounds, tags);
 
             // Bottom cell
             tags = new TagSet();
-            bounds = new Polygon(new Rect(0f, 0, WORLD_WIDTH, Bottom()));
+            bounds = new Polygon(new Rect(0f, 0, moonlet.world_size.x, Bottom()));
             CreateOverworldCell(SpaceBiome, bounds, tags);
 
             // Left side cell
@@ -381,8 +392,8 @@ namespace MiniBase
                 BottomRightNE,
                 TopRightSE,
                 TopRightNW,
-                Vec(WORLD_WIDTH, Top()),
-                Vec(WORLD_WIDTH, Bottom()),
+                Vec(moonlet.world_size.x, Top()),
+                Vec(moonlet.world_size.x, Bottom()),
             };
             bounds = new Polygon(vertices);
             CreateOverworldCell(sideBiome, bounds, tags);
@@ -462,7 +473,7 @@ namespace MiniBase
             if (moonlet.has_core)
             {
                 int coreHeight = CORE_MIN + Height() / 10;
-                int[] heights = GetHorizontalWalk(WORLD_WIDTH, coreHeight, coreHeight + CORE_DEVIATION);
+                int[] heights = GetHorizontalWalk(moonlet.world_size.x, coreHeight, coreHeight + CORE_DEVIATION);
                 ISet<Vector2I> abyssaliteCells = new HashSet<Vector2I>();
                 for (int x = relativeLeft; x < relativeRight; x++)
                 {
@@ -510,7 +521,7 @@ namespace MiniBase
             }
            
             Element borderMat = WorldGen.unobtaniumElement;
-            for (int x = 0; x < WORLD_WIDTH; x++)
+            for (int x = 0; x < moonlet.world_size.x; x++)
             {
                 // Top border
                 for (int y = Top(false); y < Top(true); y++)
@@ -660,6 +671,9 @@ namespace MiniBase
             }
             if (featureName == null)
                 return;
+
+            Log($"Placing {featureName} at : {pos.x},{pos.y}");
+
             Prefab feature = new Prefab(featureName, Prefab.Type.Other, pos.x, pos.y, SimHashes.Katairite);
             data.gameSpawnData.otherEntities.Add(feature);
 
@@ -751,10 +765,10 @@ namespace MiniBase
 
         // The following utility methods all refer to the main liveable area
         // E.g., Width() returns the width of the liveable area, not the whole map
-        public static int SideMargin() { return (WORLD_WIDTH - moonlet.size.x - 2 * BORDER_SIZE) / 2; }
+        public static int SideMargin() { return (moonlet.world_size.x - moonlet.size.x - 2 * BORDER_SIZE) / 2; }
         public static int Left(bool withBorders = false) { return SideMargin() + (withBorders ? 0 : BORDER_SIZE); }
         public static int Right(bool withBorders = false) { return Left(withBorders) + moonlet.size.x + (withBorders ? BORDER_SIZE * 2 : 0); }
-        public static int Top(bool withBorders = false) { return WORLD_HEIGHT - TOP_MARGIN - moonlet.extra_top_margin - (withBorders ? 0 : BORDER_SIZE) + 1; }
+        public static int Top(bool withBorders = false) { return moonlet.world_size.y - TOP_MARGIN - moonlet.extra_top_margin - (withBorders ? 0 : BORDER_SIZE) + 1; }
         public static int Bottom(bool withBorders = false) { return Top(withBorders) - moonlet.size.y - (withBorders ? BORDER_SIZE * 2 : 0); }
         public static int Width(bool withBorders = false) { return Right(withBorders) - Left(withBorders); }
         public static int Height(bool withBorders = false) { return Top(withBorders) - Bottom(withBorders); }

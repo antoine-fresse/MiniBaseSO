@@ -1,13 +1,13 @@
-name: STRINGS.WORLDS.MARSHYMOONLET.NAME
-description: STRINGS.WORLDS.MARSHYMOONLET.DESCRIPTION
+name: STRINGS.WORLDS.MARSHYMINIBASE.NAME
+description: STRINGS.WORLDS.MARSHYMINIBASE.DESCRIPTION
 nameTables: [ SWAMP ]
 asteroidIcon: asteroid_marshy_moonlet_kanim
 disableWorldTraits: true
 
 worldTraitScale: 0.00
 worldsize:
-  X: 70
-  Y: 40
+  X: 52
+  Y: 63
 layoutMethod: PowerTree
 
 defaultsOverrides:
